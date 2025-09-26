@@ -28,5 +28,5 @@ class DBSession:
 
 
 db_session = DBSession(
-    url=app_config.POSTGRES.url, echo=False
+    url=app_config.DB.url, echo=False
 )

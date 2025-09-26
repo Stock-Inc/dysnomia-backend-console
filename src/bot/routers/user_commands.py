@@ -89,9 +89,10 @@ async def on_command_add(message: types.Message, state: FSMContext):
     if await select_one_command(command) is not None:
         await message.answer(
             text="Команда с таким именем уже существует!",
-            reply_markup=get_main_kb(),
+            reply_markup=get_cancel_kb(),
             disable_web_page_preview=True
         )
+        return await state.set_state(CommandsFSM.WAITING_FOR_ADD_COMMAND)
     else:
         await insert_command(command, description, result)
 
@@ -115,9 +116,10 @@ async def on_command_update(message: types.Message, state: FSMContext):
     if await select_one_command(command) is None:
         await message.answer(
             text="Команды с таким именем не существует!",
-            reply_markup=get_main_kb(),
+            reply_markup=get_cancel_kb(),
             disable_web_page_preview=True
         )
+        return await state.set_state(CommandsFSM.WAITING_FOR_UPDATE_COMMAND)
     else:
         await update_command(command, n_description, n_result)
         await message.answer(
@@ -135,9 +137,10 @@ async def on_command_delete(message: types.Message, state: FSMContext):
     if await select_one_command(command) is None:
         await message.answer(
             text="Команды с таким именем не существует!",
-            reply_markup=get_main_kb(),
+            reply_markup=get_cancel_kb(),
             disable_web_page_preview=True
         )
+        return await state.set_state(CommandsFSM.WAITING_FOR_DELETE_COMMAND)
     else:
         await delete_command(command)
         await message.answer(
