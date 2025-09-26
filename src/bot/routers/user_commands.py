@@ -18,7 +18,7 @@ async def cmd_show(message: types.Message):
 
     response = [
         f"Команды: ({len(commands)})", *[
-            f"{cmd.name} {cmd.description} {cmd.result}" for cmd in commands
+            f"{cmd.name} > {cmd.description} | {cmd.result}" for cmd in commands
         ]
     ]
 
@@ -33,7 +33,7 @@ async def cmd_show(message: types.Message):
 async def cmd_add(message: types.Message, state: FSMContext):
     await state.set_state(CommandsFSM.WAITING_FOR_ADD_COMMAND)
 
-    add_text = "Формат: <команда> <описание> <результат>"
+    add_text = "Формат: <команда> <описание> | <результат>"
 
     return await message.answer(
         text=add_text,
@@ -46,7 +46,7 @@ async def cmd_add(message: types.Message, state: FSMContext):
 async def cmd_update(message: types.Message, state: FSMContext):
     await state.set_state(CommandsFSM.WAITING_FOR_UPDATE_COMMAND)
 
-    update_text = "Формат: <название команды> <новое описание> <новый результат>"
+    update_text = "Формат: <команда> <новое_описание> | <новый_результат>"
 
     await message.answer(
         text=update_text,
@@ -61,7 +61,7 @@ async def cmd_update(message: types.Message, state: FSMContext):
 async def cmd_delete(message: types.Message, state: FSMContext):
     await state.set_state(CommandsFSM.WAITING_FOR_DELETE_COMMAND)
 
-    delete_text = "Формат: <название команды>"
+    delete_text = "Формат: <команда>"
 
     await message.answer(
         text=delete_text,
@@ -81,10 +81,11 @@ async def cmd_cancel(message: types.Message, state: FSMContext):
 
 @router.message(CommandsFSM.WAITING_FOR_ADD_COMMAND)
 async def on_command_add(message: types.Message, state: FSMContext):
-    if not await InputValidator.is_valid(message):
+    if not await InputValidator.is_add_valid(message):
         return
 
-    command, description, result = map(str.strip, message.text.split(" ", 2))
+    command_desc, result = map(str.strip, message.text.split("|", 1))
+    command, description = command_desc.split(" ", 1)[0], command_desc.split(" ", 1)[1]
 
     if await select_one_command(command) is not None:
         await message.answer(
@@ -108,10 +109,11 @@ async def on_command_add(message: types.Message, state: FSMContext):
 
 @router.message(CommandsFSM.WAITING_FOR_UPDATE_COMMAND)
 async def on_command_update(message: types.Message, state: FSMContext):
-    if not await InputValidator.is_valid(message):
+    if not await InputValidator.is_update_valid(message):
         return
 
-    command, n_description, n_result = map(str.strip, message.text.split(" ", 2))
+    command_desc, n_result = map(str.strip, message.text.split("|", 1))
+    command, n_description = command_desc.split(" ", 1)[0], command_desc.split(" ", 1)[1]
 
     if await select_one_command(command) is None:
         await message.answer(
